@@ -13,7 +13,7 @@
   <extension point="xbmc.addon.metadata">
     <summary lang="de">Deutsche und englische Trailer von moviemaze.de</summary>
     <summary lang="en">German and english trailers from moviemaze.de</summary>
-    <description lang="de">Dieses Addon stellt aktuelle deutsche und englische Trailer von der Kino-Webseite www.moviemaze.de zur Verfügung.[CR][CR]Features:[CR] - lokaler Cache[CR] - bevorzugte Qualität einstellbar[CR] - bevorzugte Sprache einstellbar</description>    
+    <description lang="de">Dieses Addon stellt aktuelle deutsche und englische Trailer von der Kino-Webseite www.moviemaze.de zur Verfügung.[CR][CR]Features:[CR] - lokaler Cache[CR] - bevorzugte Qualität einstellbar[CR] - bevorzugte Sprache einstellbar</description>
     <description lang="en">This addon provides german and english trailers from the german cinema website www.moviemaze.de.[CR][CR]Features:[CR] - local Caching[CR] - preferred Quality settings[CR] - preferred language settings</description>
     <disclaimer lang="de">Genres, Release Datum and Handlung gibt es nur auf deutsch</disclaimer>
     <disclaimer lang="en">Genres, release date and plot are german only</disclaimer>
