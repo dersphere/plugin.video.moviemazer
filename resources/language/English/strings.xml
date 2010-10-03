@@ -26,4 +26,11 @@
     <string id="30200">Trailer</string>
     <string id="30210">Preferred Quality (X-Res.)</string>
     <string id="30220">Preferred language for trailers</string>
+
+    <string id="30300">Main Menu</string>
+    <string id="30310">Start with</string>
+    <string id="30311">Overview (Top10, Recent, Current)</string>
+    <string id="30312">Current</string>
+    <string id="30313">Recent Updates</string>
+    <string id="30314">Top 10 Trailers</string>
 </strings>

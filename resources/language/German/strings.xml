@@ -27,4 +27,11 @@
     <string id="30200">Trailer</string>
     <string id="30210">Bevorzugte Qualität (Horiz. Auflösung)</string>
     <string id="30220">Bevorzugte Sprache der Trailer</string>
+
+    <string id="30300">Hauptmenu</string>
+    <string id="30310">Starte mit</string>
+    <string id="30311">Überblick (Top10, letzte U., Aktuelle)</string>
+    <string id="30312">Aktuelle Trailer</string>
+    <string id="30313">Letzte Updates</string>
+    <string id="30314">Top 10 Trailer</string>    
 </strings>
