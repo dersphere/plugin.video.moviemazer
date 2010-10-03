@@ -321,6 +321,11 @@ except:
     mode = None
 
 
+startwith = int(Setting('start_with'))
+if startwith != 0:
+    mode = startwith
+
+
 if movieid != '':
     isdir = askTrailers(movieid)
 
