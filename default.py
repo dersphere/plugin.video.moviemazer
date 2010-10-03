@@ -29,6 +29,8 @@ requestheader = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2.9) Gecko/
 
 _id = os.path.basename(os.getcwd())
 _cachedir = 'special://profile/addon_data/' + _id + '/cache'
+_imagedir = xbmc.translatePath(os.path.join(os.getcwd(), 'resources', 'images'))
+
 
 Addon = xbmcaddon.Addon(_id)
 Setting = Addon.getSetting
@@ -103,8 +105,14 @@ def getMovieInfo(movieid, urlend='movie.html'):
     for title, otitle in titlematch:
         returnmovie.update({'title': title, 'otitle': otitle})
     covermatch = re.compile('src="([^"]+?)" width="150"').findall(link)
-    for coverurl in covermatch:
-        returnmovie.update({'coverurl': mainurl+coverurl})
+    try:
+        coverurl = covermatch[0]
+        if coverurl != '/filme/grafiken/kein_poster.jpg':
+            returnmovie.update({'coverurl': mainurl+coverurl})
+        else:
+            returnmovie.update({'coverurl': os.path.join(_imagedir, 'trailer.png')})
+    except:
+        returnmovie.update({'coverurl': os.path.join(_imagedir, 'trailer.png')})
     plotmatch = re.compile('WERDEN! -->(.+?)</span>').findall(link)
     for plot in plotmatch:
         plot = re.sub('<[^<]*?/?>','' , plot)
@@ -150,9 +158,9 @@ def GetMovieTrailers(movieid, urlend='movie.html'):
 # Functions to show things on a xbmc screen
 
 def showCategories():
-    addDir(Language(30003),3,'') #Current
-    addDir(Language(30001),1,'') #TopTen
-    addDir(Language(30002),2,'') #Recent
+    addDir(Language(30003), 3, os.path.join(_imagedir, 'database.png')) #Current
+    addDir(Language(30001), 1, os.path.join(_imagedir, 'ranking.png')) #TopTen
+    addDir(Language(30002), 2, os.path.join(_imagedir, 'schedule.png')) #Recent
     return True
 
 
@@ -346,4 +354,4 @@ if isdir:
     xbmcplugin.addSortMethod(Handle, xbmcplugin.SORT_METHOD_UNSORTED)
     xbmcplugin.addSortMethod(Handle, xbmcplugin.SORT_METHOD_LABEL)
     xbmcplugin.addSortMethod(Handle, xbmcplugin.SORT_METHOD_DATE)
-    xbmcplugin.endOfDirectory(Handle)
+    xbmcplugin.endOfDirectory(Handle, cacheToDisc=False)
