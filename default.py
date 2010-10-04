@@ -48,7 +48,8 @@ def getTopTen():
         movie = {'movieid': movieid,
                  'title': title,
                  'urlend': urlend,
-                 'rank': rank}
+                 'rank': rank + '. ',
+                 'date': ''}
         returnmovies.append(movie)
     return returnmovies
 
@@ -65,12 +66,13 @@ def getRecent():
             date = lastdate
         datearray = date.split(' ')
         months_de_short = ['', 'Jan', 'Feb', 'M\xe4z', 'Apr', 'Mai', 'Juni', 'Juli', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
-        try: date = datearray[0]+ str(months_de_short.index(datearray[1])).zfill(2) +  '.2010' #fixme: this could be made better, no idea how :)
-        except: date = date + ' 2010'
+        try: date = datearray[0]+ str(months_de_short.index(datearray[1])).zfill(2) #fixme: this could be made better, no idea how :)
+        except: date = ''
         movie = {'movieid': movieid,
                  'title': title,
                  'urlend': urlend,
-                 'date': date}
+                 'rank':'',
+                 'date': '(' + date + ') '}
         returnmovies.append(movie)
     return returnmovies
 
@@ -83,7 +85,9 @@ def getCurrent():
     for movieid, urlend, title in matchtacttrailers:
         movie = {'movieid': movieid,
                  'title': title,
-                 'urlend': urlend}
+                 'urlend': urlend,
+                 'rank':'',
+                 'date':''}
         returnmovies.append(movie)
     return returnmovies
 
@@ -181,7 +185,8 @@ def showMovies(movies):
     ProgressDialog.update(0)
     for movie in movies:
         movieinfo = getMovieInfo(movieid = movie['movieid'], urlend = movie['urlend'])
-        addMovie(title = movieinfo['title'],
+        title = movie['rank'] + movie['date'] + movieinfo['title']
+        addMovie(title = title,
                  movieid = movieinfo['movieid'],
                  coverurl = movieinfo['coverurl'],
                  plot = movieinfo['plot'],
