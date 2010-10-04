@@ -180,7 +180,7 @@ def showCurrent():
     return True
 
 def showMovies(movies):
-    counter = 0    
+    counter = 0
     ProgressDialog = xbmcgui.DialogProgress()
     ProgressDialog.create(Language(30020), str(len(movies)) + ' ' + Language(30021))
     ProgressDialog.update(0)
@@ -336,16 +336,12 @@ if startwith != 0:
 
 if movieid != '':
     isdir = askTrailers(movieid)
-
 elif mode == 1:
     isdir = showTopTen()
-
 elif mode == 2:
     isdir = showRecent()
-    
 elif mode == 3:
     isdir = showCurrent()
-
 else:
     isdir = showCategories()
 
@@ -354,4 +350,4 @@ if isdir:
     xbmcplugin.addSortMethod(Handle, xbmcplugin.SORT_METHOD_UNSORTED)
     xbmcplugin.addSortMethod(Handle, xbmcplugin.SORT_METHOD_LABEL)
     xbmcplugin.addSortMethod(Handle, xbmcplugin.SORT_METHOD_DATE)
-    xbmcplugin.endOfDirectory(Handle, cacheToDisc=False)
+    xbmcplugin.endOfDirectory(Handle, cacheToDisc=True)
