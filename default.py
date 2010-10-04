@@ -139,8 +139,8 @@ def GetMovieTrailers(movieid, urlend='movie.html'):
             months_de_short = ['', 'Jan', 'Feb', 'M\xe4rz', 'Apr', 'Mai', 'Juni', 'Juli', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
             try: date = datearray[0]+ str(months_de_short.index(datearray[1])).zfill(2) +  '.2010' #fixme: this could be made better, no idea how :)
             except: date = '' #fixme: unknown -> trans
-            matchtrailer = re.compile('>([0-9]+ x [0-9]+)<.+?generateDownloadLink\("([^"]+)"\)').findall(languageblock)
-            for resolution, trailerurl in matchtrailer:
+            matchtrailer = re.compile('generateDownloadLink\("([^"]+_([0-9]+)\.(?:mov|mp4)\?down=1)"\)').findall(languageblock)
+            for trailerurl, resolution in matchtrailer:
                 trailer = {'trailername': trailername,
                            'language': language,
                            'resolution': resolution,
