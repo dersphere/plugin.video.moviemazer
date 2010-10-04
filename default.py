@@ -105,14 +105,9 @@ def getMovieInfo(movieid, urlend='movie.html'):
     for title, otitle in titlematch:
         returnmovie.update({'title': title, 'otitle': otitle})
     covermatch = re.compile('src="([^"]+?)" width="150"').findall(link)
-    try:
-        coverurl = covermatch[0]
+    for coverurl in covermatch:
         if coverurl != '/filme/grafiken/kein_poster.jpg':
             returnmovie.update({'coverurl': mainurl+coverurl})
-        else:
-            returnmovie.update({'coverurl': os.path.join(_imagedir, 'trailer.png')})
-    except:
-        returnmovie.update({'coverurl': os.path.join(_imagedir, 'trailer.png')})
     plotmatch = re.compile('WERDEN! -->(.+?)</span>').findall(link)
     for plot in plotmatch:
         plot = re.sub('<[^<]*?/?>','' , plot)
@@ -158,9 +153,9 @@ def GetMovieTrailers(movieid, urlend='movie.html'):
 # Functions to show things on a xbmc screen
 
 def showCategories():
-    addDir(Language(30003), 3, os.path.join(_imagedir, 'database.png')) #Current
-    addDir(Language(30001), 1, os.path.join(_imagedir, 'ranking.png')) #TopTen
-    addDir(Language(30002), 2, os.path.join(_imagedir, 'schedule.png')) #Recent
+    if mode != 3: addDir(Language(30003), 3, os.path.join(_imagedir, 'database.png')) #Current
+    if mode != 1: addDir(Language(30001), 1, os.path.join(_imagedir, 'ranking.png')) #TopTen
+    if mode != 2: addDir(Language(30002), 2, os.path.join(_imagedir, 'schedule.png')) #Recent
     return True
 
 
@@ -268,7 +263,7 @@ def playTrailer(trailerurl, title='', studio='', coverurl=''):
                            thumbnailImage = coverurl)
     liz.setInfo(type = 'Video',
                 infoLabels = {'Title': title, 'Studio': studio})
-    xbmc.Player(xbmc.PLAYER_CORE_MPLAYER).play(trailerurl, liz)
+    xbmc.Player(xbmc.PLAYER_CORE_AUTO).play(trailerurl, liz)
     return False
 
 
@@ -330,8 +325,10 @@ except:
 
 
 startwith = int(Setting('start_with'))
-if startwith != 0:
-    mode = startwith
+if startwith != 0: #Setting 'start_with' is not "show all categories"
+    if mode == None: #And we have just started moviezaer
+        mode = startwith
+    isdir = showCategories()
 
 
 if movieid != '':
