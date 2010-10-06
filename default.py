@@ -28,8 +28,8 @@ mainurl = 'http://www.moviemaze.de'
 requestheader = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2.9) Gecko/20100824 Firefox/3.6.9'
 
 _id = os.path.basename(os.getcwd())
-_cachedir = 'special://profile/addon_data/' + _id + '/cache'
-_imagedir = xbmc.translatePath(os.path.join(os.getcwd(), 'resources', 'images'))
+_cachedir = 'special://profile/addon_data/' + _id + '/cache/'
+_imagedir = 'special://home/addons/' + _id + '/resources/images/'
 
 
 Addon = xbmcaddon.Addon(_id)
@@ -111,7 +111,7 @@ def getMovieInfo(movieid, urlend='movie.html'):
     covermatch = re.compile('src="([^"]+?)" width="150"').findall(link)
     for coverurl in covermatch:
         if coverurl != '/filme/grafiken/kein_poster.jpg':
-            returnmovie.update({'coverurl': mainurl+coverurl})
+            returnmovie.update({'coverurl': mainurl + coverurl})
     plotmatch = re.compile('WERDEN! -->(.+?)</span>').findall(link)
     for plot in plotmatch:
         plot = re.sub('<[^<]*?/?>','' , plot)
@@ -146,6 +146,7 @@ def GetMovieTrailers(movieid, urlend='movie.html'):
             matchtrailer = re.compile('generateDownloadLink\("([^"]+_([0-9]+)\.(?:mov|mp4)\?down=1)"\)').findall(languageblock)
             for trailerurl, resolution in matchtrailer:
                 trailer = {'trailername': trailername,
+                           'duration': duration,
                            'language': language,
                            'resolution': resolution,
                            'date': date,
@@ -179,6 +180,7 @@ def showCurrent():
     return True
 
 def showMovies(movies):
+    pc = loadPlayCounts()
     counter = 0
     ProgressDialog = xbmcgui.DialogProgress()
     ProgressDialog.create(Language(30020), str(len(movies)) + ' ' + Language(30021))
@@ -192,7 +194,8 @@ def showMovies(movies):
                  plot = movieinfo['plot'],
                  otitle = movieinfo['otitle'],
                  genres = movieinfo['genres'],
-                 releasedate = movieinfo['date'])
+                 releasedate = movieinfo['date'],
+                 playcount = getPlayCount(movie['movieid'], pc))
         counter += 1
         ProgressDialog.update(100 * counter / len(movies),
                               str(len(movies)) + ' ' + Language(30021), # xx movies have to be cached
@@ -214,21 +217,23 @@ def addDir(dirname, mode, iconimage):
                                      isFolder = True)
 
 
-def addMovie(title, movieid, coverurl='', plot='', otitle='', genres='', releasedate='', rating=''):
+def addMovie(title, movieid, coverurl='', plot='', otitle='', genres='', releasedate='', playcount=0):
     u = sys.argv[0] + '?mode=' + str(mode) + '&movieid=' + movieid
     liz = xbmcgui.ListItem(title,
                            iconImage = 'DefaultVideo.png',
                            thumbnailImage = coverurl)
     liz.setInfo(type = 'Video',
                 infoLabels = {'Title': title,
-                             'Premiered': releasedate, #fixme: why this doesn't work?
-                             'Tagline': Language(30030) + ': ' + releasedate,
-                             'Date' : releasedate, #fixme: why this doesn't work?
-                             'Plot': plot,
-                             'Studio': otitle, #fixme: there is no label for "original title"
-                             'Genre': genres})
-    if rating != '':
-        liz.setInfo(type = 'Video', infoLabels = {'Rating': rating})
+                              'Tagline': Language(30030) + ': ' + releasedate,
+                              'Plot': plot,
+                              'Studio': otitle, #fixme: there is no label for "original title"
+                              'Genre': genres})
+    liz.setProperty('releasedate', releasedate)
+    if int(playcount) > 0:
+        liz.setInfo(type = 'Video', infoLabels = {'overlay': 7})
+    if releasedate != '':
+        year = int(releasedate.split('.')[2])
+        liz.setInfo(type = 'Video', infoLabels = {'Year': year})
     ok = xbmcplugin.addDirectoryItem(handle = Handle,
                                      url = u,
                                      listitem = liz,
@@ -255,6 +260,7 @@ def askTrailers(movieid):
                         title = movieinfo['title'],
                         studio = trailercaptionlist[chosentrailer],
                         coverurl = movieinfo['coverurl'])
+            setPlayCount(movieid)
     else:
         ok = Dialog.ok(movieinfo['title'], Language(30012)) #No Trailer found :(
     return False
@@ -269,13 +275,12 @@ def playTrailer(trailerurl, title='', studio='', coverurl=''):
     liz.setInfo(type = 'Video',
                 infoLabels = {'Title': title, 'Studio': studio})
     xbmc.Player(xbmc.PLAYER_CORE_AUTO).play(trailerurl, liz)
-    return False
 
 
 # Helper Functions
 
 def getCachedURL(url, filename, timetolive=1):
-    cachefilefullpath = _cachedir + '/' + filename
+    cachefilefullpath = _cachedir + filename
     timetolive = int(timetolive) * 60 * 60  # timetolive settings are in hours!
     if (not os.path.isdir(_cachedir)):
         os.makedirs(_cachedir)
@@ -297,6 +302,47 @@ def getCachedURL(url, filename, timetolive=1):
     return link
 
 
+def loadPlayCounts():
+    pc = {}
+    watchedfile = _cachedir + 'watchedfile'
+    try:
+        infile = open(watchedfile,'r')
+        for line in infile.readlines():
+            movie, playcount = line.split(';')
+            pc[movie.strip()] = int(playcount.strip())
+        infile.close()
+    except:
+        pass
+    return pc
+
+
+def savePlayCounts(pc):
+    watchedfile = _cachedir + 'watchedfile'
+    outfile = open(watchedfile,'w')
+    for line in pc.iteritems():
+        outfile.write(';'.join(map(str,line)) + '\n')
+    outfile.close()
+
+
+def getPlayCount(movieid, pc=None):
+    if pc == None:
+        pc = loadPlayCounts()
+    if movieid in pc:
+        movieplayed = pc[movieid]
+    else:
+        movieplayed = 0
+    return movieplayed
+
+
+def setPlayCount(movieid, count=1):
+    pc = loadPlayCounts()
+    if movieid in pc:
+        pc[movieid] += count
+    else:
+        pc[movieid] = count
+    savePlayCounts(pc)
+
+
 def get_params():
     param = []
     paramstring = sys.argv[2]
@@ -313,6 +359,7 @@ def get_params():
             if (len(splitparams)) == 2:
                 param[splitparams[0]] = splitparams[1]
     return param
+
 
 # Addon Standard Stuff - here the addon starts
 
