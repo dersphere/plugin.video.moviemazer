@@ -277,12 +277,12 @@ def guessPrefTrailer(movietrailers):
     while len(prefmovietrailers) == 0:
         searchres = prefres + diff
         if not searchres >= len(allres):
-            print "searching for " + allres[searchres]
+            #print "searching for " + allres[searchres]
             prefmovietrailers = filterdic(movietrailers, 'resolution', allres[searchres])
         if len(prefmovietrailers) == 0 and not diff == 0:
             searchres = prefres - diff
             if searchres >= 0:
-                print "searching for " + allres[searchres]
+                #print "searching for " + allres[searchres]
                 prefmovietrailers = filterdic(movietrailers, 'resolution', allres[searchres])          
         diff += 1
     prefmovietrailer = prefmovietrailers[len(prefmovietrailers) - 1]
@@ -413,6 +413,7 @@ try:
 except:
     mode = None
 
+print params
 
 startwith = int(Setting('start_with'))
 if startwith != 0: #Setting 'start_with' is not "show all categories"
@@ -420,7 +421,6 @@ if startwith != 0: #Setting 'start_with' is not "show all categories"
         cat = startwith
     isdir = showCategories()
 
-print params
 
 if movieid != '':
     if mode == 'guess':
@@ -428,14 +428,20 @@ if movieid != '':
     elif mode == 'ask':
         trailer = askTrailer(GetMovieTrailers(movieid))
     else:
-        pass #fixme let here default action come
-    
-    playTrailer(trailerurl=trailer['trailerurl'],
-                title=trailer['title'],
-                studio=trailer['studio'],
-                coverurl=trailer['coverurl'])
-    isdir = False
-elif cat == 1:
+        prefmode = Setting('pref_mode')
+        if prefmode == '0': #play pref
+            trailer = guessPrefTrailer(GetMovieTrailers(movieid))
+        elif prefmode == '1': #ask me
+            trailer = askTrailer(GetMovieTrailers(movieid))
+    if trailer != False:
+        playTrailer(trailerurl=trailer['trailerurl'],
+                    title=trailer['title'],
+                    studio=trailer['studio'],
+                    coverurl=trailer['coverurl'])
+        print 'play end'
+
+
+if cat == 1:
     isdir = showTopTen()
 elif cat == 2:
     isdir = showRecent()
