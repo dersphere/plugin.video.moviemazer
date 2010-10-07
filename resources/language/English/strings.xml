@@ -24,11 +24,12 @@
     <string id="30120">Cache movieinfos (in h)</string>
     
     <string id="30200">Trailer</string>
-    <string id="30230">Preferred Mode</string>
-      <string id="30231">Play most preferred</string>
-      <string id="30232">Ask me everytime</string>
-    <string id="30210">Preferred Quality (X-Res.)</string>
-    <string id="30220">Preferred language for trailers</string>
+    <string id="30230">Favoured Mode</string>
+    <string id="30231">Play most favoured</string>
+    <string id="30232">Choose Trailer</string>
+
+    <string id="30210">Favoured Quality (X-Res.)</string>
+    <string id="30220">Favoured language for trailers</string>
 
     <string id="30300">Main Menu</string>
     <string id="30310">Start with</string>

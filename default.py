@@ -25,17 +25,16 @@ import xbmcaddon
 # Creating some default variables and objects
 
 mainurl = 'http://www.moviemaze.de'
-requestheader = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2.9) Gecko/20100824 Firefox/3.6.9'
 
 _id = os.path.basename(os.getcwd())
 _cachedir = 'special://profile/addon_data/' + _id + '/cache/'
 _imagedir = 'special://home/addons/' + _id + '/resources/images/'
 
-
 Addon = xbmcaddon.Addon(_id)
 Setting = Addon.getSetting
 Language = Addon.getLocalizedString
 Handle = int(sys.argv[1])
+
 
 # Functions for getting a list of dicts containing movie headers like ID and title
 
@@ -155,29 +154,31 @@ def GetMovieTrailers(movieid, urlend='movie.html'):
     return returntrailers
 
 
-# Functions to show things on a xbmc screen
+# Functions to get the informations for xbmc
 
 def showCategories():
-    if cat != 3: addDir(Language(30003), 3, os.path.join(_imagedir, 'database.png')) #Current
-    if cat != 1: addDir(Language(30001), 1, os.path.join(_imagedir, 'ranking.png')) #TopTen
-    if cat != 2: addDir(Language(30002), 2, os.path.join(_imagedir, 'schedule.png')) #Recent
-    return True
+    addDir(Language(30003), 3, os.path.join(_imagedir, 'database.png')) #Current
+    addDir(Language(30001), 1, os.path.join(_imagedir, 'ranking.png')) #TopTen
+    addDir(Language(30002), 2, os.path.join(_imagedir, 'schedule.png')) #Recent
+    endDir()
 
 
 def showTopTen():
     toptenmovies = getTopTen()
     showMovies(toptenmovies)
-    return True
+    endDir()
 
 def showRecent():
     recentmovies = getRecent()
     showMovies(recentmovies)
-    return True
+    endDir()
 
 def showCurrent():
     currentmovies = getCurrent()
     showMovies(currentmovies)
-    return True
+    endDir()
+
+# Functions to show the informations in xbmc
 
 def showMovies(movies):
     pc = loadPlayCounts()
@@ -203,6 +204,8 @@ def showMovies(movies):
         if ProgressDialog.iscanceled(): break
     ProgressDialog.close()
 
+
+# Functions to add single Folders to the xbmc screen and tell xbmc that all is there
 
 def addDir(dirname, cat, iconimage):
     u = sys.argv[0]+'?cat='+str(cat)
@@ -234,16 +237,23 @@ def addMovie(title, movieid, coverurl='', plot='', otitle='', genres='', release
     if releasedate != '':
         year = int(releasedate.split('.')[2])
         liz.setInfo(type = 'Video', infoLabels = {'Year': year})
-    contextmenu = [('Guess','XBMC.RunPlugin(' + u + '&mode=guess)'),
-                   ('ask','XBMC.RunPlugin(' + u + '&mode=ask)')]
-    liz.addContextMenuItems(contextmenu, True)
-    ok = xbmcplugin.addDirectoryItem(handle = Handle,
-                                     url = u,
-                                     listitem = liz,
-                                     isFolder = False)
+    contextmenu = [(Language(30231),'XBMC.RunPlugin(' + u + '&mode=guess)'),
+                   (Language(30232),'XBMC.RunPlugin(' + u + '&mode=ask)')]
+    liz.addContextMenuItems(contextmenu, False)
+    xbmcplugin.addDirectoryItem(handle = Handle,
+                                url = u,
+                                listitem = liz,
+                                isFolder = False)
 
 
-# Function to show an XBMC Dialog.select and ask to choose a trailer
+def endDir():
+    xbmcplugin.addSortMethod(Handle, xbmcplugin.SORT_METHOD_UNSORTED)
+    xbmcplugin.addSortMethod(Handle, xbmcplugin.SORT_METHOD_LABEL)
+    xbmcplugin.addSortMethod(Handle, xbmcplugin.SORT_METHOD_DATE)
+    xbmcplugin.endOfDirectory(Handle, cacheToDisc=True)
+
+
+# Functions to choose a trailer - ask user or guess with the preferred settings
 
 def askTrailer(movietrailers):
     movieinfo = getMovieInfo(movieid)
@@ -256,7 +266,7 @@ def askTrailer(movietrailers):
         trailerurllist.append(trailer['trailerurl'])
     Dialog = xbmcgui.Dialog()
     if len(trailercaptionlist) > 1:
-        chosentrailer = Dialog.select(Language(30010), trailercaptionlist) #Choose a Trailer
+        chosentrailer = Dialog.select(Language(30010), trailercaptionlist)
         if chosentrailer != 0:
             trailer = {'trailerurl': trailerurllist[chosentrailer],
                        'title': movieinfo['title'],
@@ -264,26 +274,25 @@ def askTrailer(movietrailers):
                        'coverurl':movieinfo['coverurl']}
             setPlayCount(movieid)
             return trailer
-        else: return False
-    else: return False
-    #    ok = Dialog.ok(movieinfo['title'], Language(30012)) #No Trailer found :(
-    
+    else:
+        Dialog.ok(movieinfo['title'], Language(30012)) #No Trailer found :(
+
 
 def guessPrefTrailer(movietrailers):
     prefres = int(Setting('trailer_xres'))
     allres = ['1920', '1280', '848', '720', '640', '480', '320']
     prefmovietrailers = []
     diff = 0
+    if len(filterdic(movietrailers, 'language', Setting('trailer_lang'))) > 0:
+        movietrailers = filterdic(movietrailers, 'language', Setting('trailer_lang'))
     while len(prefmovietrailers) == 0:
         searchres = prefres + diff
         if not searchres >= len(allres):
-            #print "searching for " + allres[searchres]
             prefmovietrailers = filterdic(movietrailers, 'resolution', allres[searchres])
         if len(prefmovietrailers) == 0 and not diff == 0:
             searchres = prefres - diff
             if searchres >= 0:
-                #print "searching for " + allres[searchres]
-                prefmovietrailers = filterdic(movietrailers, 'resolution', allres[searchres])          
+                prefmovietrailers = filterdic(movietrailers, 'resolution', allres[searchres])
         diff += 1
     prefmovietrailer = prefmovietrailers[len(prefmovietrailers) - 1]
     trailercaption = prefmovietrailer['trailername'] + ' - ' + prefmovietrailer['language'] + ' - ' + prefmovietrailer['resolution'] + ' (' + prefmovietrailer['date'] + ')'
@@ -296,9 +305,6 @@ def guessPrefTrailer(movietrailers):
     return trailer
 
 
-def filterdic(dic, key, value):
-    return [d for d in dic if (d.get(key)==value)]
-
 # Function to play a Trailer
 
 def playTrailer(trailerurl, title='', studio='', coverurl=''):
@@ -307,12 +313,14 @@ def playTrailer(trailerurl, title='', studio='', coverurl=''):
                            thumbnailImage = coverurl)
     liz.setInfo(type = 'Video',
                 infoLabels = {'Title': title, 'Studio': studio})
-    xbmc.Player(xbmc.PLAYER_CORE_AUTO).play(trailerurl, liz)
+    Player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+    Player.play(trailerurl, liz)
 
 
 # Helper Functions
 
 def getCachedURL(url, filename, timetolive=1):
+    requestheader = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2.9) Gecko/20100824 Firefox/3.6.9'
     cachefilefullpath = _cachedir + filename
     timetolive = int(timetolive) * 60 * 60  # timetolive settings are in hours!
     if (not os.path.isdir(_cachedir)):
@@ -334,6 +342,30 @@ def getCachedURL(url, filename, timetolive=1):
     sock.close()
     return link
 
+
+def filterdic(dic, key, value):
+    return [d for d in dic if (d.get(key)==value)]
+
+
+def get_params():
+    param = []
+    paramstring = sys.argv[2]
+    if len(paramstring) >= 2:
+        params = sys.argv[2]
+        cleanedparams = params.replace('?','')
+        if (params[len(params)-1] == '/'):
+            params = params[0:len(params)-2]
+        pairsofparams = cleanedparams.split('&')
+        param = {}
+        for i in range(len(pairsofparams)):
+            splitparams = {}
+            splitparams = pairsofparams[i].split('=')
+            if (len(splitparams)) == 2:
+                param[splitparams[0]] = splitparams[1]
+    return param
+
+
+# Functions for get/set and load/save the user playcounts
 
 def loadPlayCounts():
     pc = {}
@@ -376,24 +408,6 @@ def setPlayCount(movieid, count=1):
     savePlayCounts(pc)
 
 
-def get_params():
-    param = []
-    paramstring = sys.argv[2]
-    if len(paramstring) >= 2:
-        params = sys.argv[2]
-        cleanedparams = params.replace('?','')
-        if (params[len(params)-1] == '/'):
-            params = params[0:len(params)-2]
-        pairsofparams = cleanedparams.split('&')
-        param = {}
-        for i in range(len(pairsofparams)):
-            splitparams = {}
-            splitparams = pairsofparams[i].split('=')
-            if (len(splitparams)) == 2:
-                param[splitparams[0]] = splitparams[1]
-    return param
-
-
 # Addon Standard Stuff - here the addon starts
 
 params = get_params()
@@ -413,46 +427,36 @@ try:
 except:
     mode = None
 
-print params
 
 startwith = int(Setting('start_with'))
-if startwith != 0: #Setting 'start_with' is not "show all categories"
-    if cat == None: #And we have just started moviezaer
+if startwith != 0:
+    if cat == None:
         cat = startwith
-    isdir = showCategories()
+        addDir(Language(30311), 0, os.path.join(_imagedir, 'trailer.png')) #Categories
 
 
 if movieid != '':
+    trailer = None
     if mode == 'guess':
         trailer = guessPrefTrailer(GetMovieTrailers(movieid))
     elif mode == 'ask':
         trailer = askTrailer(GetMovieTrailers(movieid))
     else:
         prefmode = Setting('pref_mode')
-        if prefmode == '0': #play pref
+        if prefmode == '0':
             trailer = guessPrefTrailer(GetMovieTrailers(movieid))
-        elif prefmode == '1': #ask me
+        elif prefmode == '1':
             trailer = askTrailer(GetMovieTrailers(movieid))
-    if trailer != False:
+    if trailer != None:
         playTrailer(trailerurl=trailer['trailerurl'],
                     title=trailer['title'],
                     studio=trailer['studio'],
                     coverurl=trailer['coverurl'])
-        print 'play end'
-
-
-if cat == 1:
-    isdir = showTopTen()
+elif cat == 1:
+    showTopTen()
 elif cat == 2:
-    isdir = showRecent()
+    showRecent()
 elif cat == 3:
-    isdir = showCurrent()
+    showCurrent()
 else:
-    isdir = showCategories()
-
-
-if isdir:
-    xbmcplugin.addSortMethod(Handle, xbmcplugin.SORT_METHOD_UNSORTED)
-    xbmcplugin.addSortMethod(Handle, xbmcplugin.SORT_METHOD_LABEL)
-    xbmcplugin.addSortMethod(Handle, xbmcplugin.SORT_METHOD_DATE)
-    xbmcplugin.endOfDirectory(Handle, cacheToDisc=True)
+    showCategories()
