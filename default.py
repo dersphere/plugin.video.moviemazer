@@ -121,7 +121,7 @@ def getMovieInfo(movieid, urlend='movie.html'):
         datearray = releasedateugly.split(' ')
         months_de_long = ['', 'Januar', 'Februar', 'M\xe4rz', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
         date = datearray[0]+ str(months_de_long.index(datearray[1])).zfill(2) + '.' + datearray[2]
-        returnmovie.update({'date': date}) #fixme: date is not shown...
+        returnmovie.update({'date': date})
     genresmatch = re.compile('<b style="font-weight:bold;">Genre:</b> (.+?)<br />', re.DOTALL).findall(link)
     for allgenres in genresmatch:
         returnmovie.update({'genres': allgenres})
@@ -142,7 +142,7 @@ def GetMovieTrailers(movieid, urlend='movie.html'):
             datearray = date.split(' ')
             months_de_short = ['', 'Jan', 'Feb', 'M\xe4rz', 'Apr', 'Mai', 'Juni', 'Juli', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
             try: date = datearray[0]+ str(months_de_short.index(datearray[1])).zfill(2) +  '.2010' #fixme: this could be made better, no idea how :)
-            except: date = '' #fixme: unknown -> trans
+            except: date = ''
             matchtrailer = re.compile('generateDownloadLink\("([^"]+_([0-9]+)\.(?:mov|mp4)\?down=1)"\)').findall(languageblock)
             for trailerurl, resolution in matchtrailer:
                 trailer = {'trailername': trailername,
@@ -158,9 +158,9 @@ def GetMovieTrailers(movieid, urlend='movie.html'):
 # Functions to show things on a xbmc screen
 
 def showCategories():
-    if mode != 3: addDir(Language(30003), 3, os.path.join(_imagedir, 'database.png')) #Current
-    if mode != 1: addDir(Language(30001), 1, os.path.join(_imagedir, 'ranking.png')) #TopTen
-    if mode != 2: addDir(Language(30002), 2, os.path.join(_imagedir, 'schedule.png')) #Recent
+    if cat != 3: addDir(Language(30003), 3, os.path.join(_imagedir, 'database.png')) #Current
+    if cat != 1: addDir(Language(30001), 1, os.path.join(_imagedir, 'ranking.png')) #TopTen
+    if cat != 2: addDir(Language(30002), 2, os.path.join(_imagedir, 'schedule.png')) #Recent
     return True
 
 
@@ -198,14 +198,14 @@ def showMovies(movies):
                  playcount = getPlayCount(movie['movieid'], pc))
         counter += 1
         ProgressDialog.update(100 * counter / len(movies),
-                              str(len(movies)) + ' ' + Language(30021), # xx movies have to be cached
-                              Language(30022) + ': ' + movieinfo['title'].decode('utf-8', 'ignore')) # Loading : yy
+                              str(len(movies)) + ' ' + Language(30021), # x movies have to be cached
+                              Language(30022) + ': ' + movieinfo['title'].decode('utf-8', 'ignore')) # Loading : y
         if ProgressDialog.iscanceled(): break
     ProgressDialog.close()
 
 
-def addDir(dirname, mode, iconimage):
-    u = sys.argv[0]+'?mode='+str(mode)
+def addDir(dirname, cat, iconimage):
+    u = sys.argv[0]+'?cat='+str(cat)
     liz = xbmcgui.ListItem(dirname,
                            iconImage = 'DefaultVideo.png',
                            thumbnailImage = iconimage)
@@ -218,7 +218,7 @@ def addDir(dirname, mode, iconimage):
 
 
 def addMovie(title, movieid, coverurl='', plot='', otitle='', genres='', releasedate='', playcount=0):
-    u = sys.argv[0] + '?mode=' + str(mode) + '&movieid=' + movieid
+    u = sys.argv[0] + '?cat=' + str(cat) + '&movieid=' + movieid
     liz = xbmcgui.ListItem(title,
                            iconImage = 'DefaultVideo.png',
                            thumbnailImage = coverurl)
@@ -234,6 +234,9 @@ def addMovie(title, movieid, coverurl='', plot='', otitle='', genres='', release
     if releasedate != '':
         year = int(releasedate.split('.')[2])
         liz.setInfo(type = 'Video', infoLabels = {'Year': year})
+    contextmenu = [('Guess','XBMC.RunPlugin(' + u + '&mode=guess)'),
+                   ('ask','XBMC.RunPlugin(' + u + '&mode=ask)')]
+    liz.addContextMenuItems(contextmenu, True)
     ok = xbmcplugin.addDirectoryItem(handle = Handle,
                                      url = u,
                                      listitem = liz,
@@ -242,8 +245,7 @@ def addMovie(title, movieid, coverurl='', plot='', otitle='', genres='', release
 
 # Function to show an XBMC Dialog.select and ask to choose a trailer
 
-def askTrailers(movieid):
-    movietrailers = GetMovieTrailers(movieid)
+def askTrailer(movietrailers):
     movieinfo = getMovieInfo(movieid)
     backlabel = '--> ' + Language(30011) + ' <--' #Back, there is no 'cancel' in Dialog.select :(
     trailercaptionlist = [backlabel]
@@ -256,15 +258,46 @@ def askTrailers(movieid):
     if len(trailercaptionlist) > 1:
         chosentrailer = Dialog.select(Language(30010), trailercaptionlist) #Choose a Trailer
         if chosentrailer != 0:
-            playTrailer(trailerurl = trailerurllist[chosentrailer],
-                        title = movieinfo['title'],
-                        studio = trailercaptionlist[chosentrailer],
-                        coverurl = movieinfo['coverurl'])
+            trailer = {'trailerurl': trailerurllist[chosentrailer],
+                       'title': movieinfo['title'],
+                       'studio': trailercaptionlist[chosentrailer],
+                       'coverurl':movieinfo['coverurl']}
             setPlayCount(movieid)
-    else:
-        ok = Dialog.ok(movieinfo['title'], Language(30012)) #No Trailer found :(
-    return False
+            return trailer
+        else: return False
+    else: return False
+    #    ok = Dialog.ok(movieinfo['title'], Language(30012)) #No Trailer found :(
+    
 
+def guessPrefTrailer(movietrailers):
+    prefres = int(Setting('trailer_xres'))
+    allres = ['1920', '1280', '848', '720', '640', '480', '320']
+    prefmovietrailers = []
+    diff = 0
+    while len(prefmovietrailers) == 0:
+        searchres = prefres + diff
+        if not searchres >= len(allres):
+            print "searching for " + allres[searchres]
+            prefmovietrailers = filterdic(movietrailers, 'resolution', allres[searchres])
+        if len(prefmovietrailers) == 0 and not diff == 0:
+            searchres = prefres - diff
+            if searchres >= 0:
+                print "searching for " + allres[searchres]
+                prefmovietrailers = filterdic(movietrailers, 'resolution', allres[searchres])          
+        diff += 1
+    prefmovietrailer = prefmovietrailers[len(prefmovietrailers) - 1]
+    trailercaption = prefmovietrailer['trailername'] + ' - ' + prefmovietrailer['language'] + ' - ' + prefmovietrailer['resolution'] + ' (' + prefmovietrailer['date'] + ')'
+    movieinfo = getMovieInfo(movieid)
+    setPlayCount(movieid)
+    trailer = {'trailerurl': prefmovietrailer['trailerurl'],
+               'title': movieinfo['title'],
+               'studio': trailercaption,
+               'coverurl':movieinfo['coverurl']}
+    return trailer
+
+
+def filterdic(dic, key, value):
+    return [d for d in dic if (d.get(key)==value)]
 
 # Function to play a Trailer
 
@@ -371,25 +404,42 @@ except:
     movieid = ''
 
 try:
-    mode = int(params['mode'])
+    cat = int(params['cat'])
+except:
+    cat = None
+
+try:
+    mode = params['mode']
 except:
     mode = None
 
 
 startwith = int(Setting('start_with'))
 if startwith != 0: #Setting 'start_with' is not "show all categories"
-    if mode == None: #And we have just started moviezaer
-        mode = startwith
+    if cat == None: #And we have just started moviezaer
+        cat = startwith
     isdir = showCategories()
 
+print params
 
 if movieid != '':
-    isdir = askTrailers(movieid)
-elif mode == 1:
+    if mode == 'guess':
+        trailer = guessPrefTrailer(GetMovieTrailers(movieid))
+    elif mode == 'ask':
+        trailer = askTrailer(GetMovieTrailers(movieid))
+    else:
+        pass #fixme let here default action come
+    
+    playTrailer(trailerurl=trailer['trailerurl'],
+                title=trailer['title'],
+                studio=trailer['studio'],
+                coverurl=trailer['coverurl'])
+    isdir = False
+elif cat == 1:
     isdir = showTopTen()
-elif mode == 2:
+elif cat == 2:
     isdir = showRecent()
-elif mode == 3:
+elif cat == 3:
     isdir = showCurrent()
 else:
     isdir = showCategories()
