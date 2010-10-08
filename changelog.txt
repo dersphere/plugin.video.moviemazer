@@ -4,7 +4,7 @@
   Added loading/saving of watched status (playcount)
   Added TopTen Movies have now rank position in title
   Added Recent Movies have now recent update date in title
-  Added possibility and setting for trailer-guss (based on favoured resolution and language)
+  Added possibility and setting for trailer-guess (based on favoured resolution and language)
   Improved RegExp's
 
 0.1.1
