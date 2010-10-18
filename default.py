@@ -315,6 +315,7 @@ def playTrailer(trailerurl, title='', studio='', coverurl=''):
                 infoLabels = {'Title': title, 'Studio': studio})
     Player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
     Player.play(trailerurl, liz)
+    xbmc.executebuiltin('Container.Refresh')
 
 
 # Helper Functions
