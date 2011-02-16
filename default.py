@@ -295,7 +295,7 @@ def guessPrefTrailer(movietrailers):
                 prefmovietrailers = filterdic(movietrailers, 'resolution', allres[searchres])
         diff += 1
     prefmovietrailer = prefmovietrailers[len(prefmovietrailers) - 1]
-    trailercaption = '%s - %s - %s (%s)' %(trailer['trailername'], trailer['language'], trailer['resolution'], trailer['date'])
+    trailercaption = '%s - %s - %s (%s)' %(prefmovietrailer['trailername'], prefmovietrailer['language'], prefmovietrailer['resolution'], prefmovietrailer['date'])
     movieinfo = getMovieInfo(movieid)
     setPlayCount(movieid)
     trailer = {'trailerurl': prefmovietrailer['trailerurl'],
@@ -315,6 +315,9 @@ def playTrailer(trailerurl, title='', studio='', coverurl=''):
                 infoLabels = {'Title': title, 'Studio': studio})
     Player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
     Player.play(trailerurl, liz)
+    xbmc.sleep(2000) # wait 1 sec
+    while Player.isPlaying():
+        xbmc.sleep(1000) # wait with the container.refresh while xbmc is still playing
     xbmc.executebuiltin('Container.Refresh')
 
 
