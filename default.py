@@ -28,8 +28,8 @@ Addon = xbmcaddon.Addon('plugin.video.moviemazer')
 mainurl = 'http://www.moviemaze.de'
 
 _id = Addon.getAddonInfo('id')
-_cachedir = 'special://profile/addon_data/' + _id + '/cache/'
-_imagedir = 'special://home/addons/' + _id + '/resources/images/'
+_cachedir = 'special://profile/addon_data/%s/cache/' %(_id)
+_imagedir = 'special://home/addons/%s/resources/images/' %(_id)
 
 Setting = Addon.getSetting
 Language = Addon.getLocalizedString
@@ -71,7 +71,7 @@ def getRecent():
                  'title': title,
                  'urlend': urlend,
                  'rank':'',
-                 'date': '(' + date + ') '}
+                 'date': '(%s) ' %(date)}
         returnmovies.append(movie)
     return returnmovies
 
@@ -101,8 +101,8 @@ def getMovieInfo(movieid, urlend='movie.html'):
                    'plot': '',
                    'genres': '',
                    'date': ''}
-    fullurl = mainurl + '/media/trailer/' + movieid + ',15,' + urlend
-    cachefile = 'id' + movieid + '.cache'
+    fullurl = '%s/media/trailer/%s,15,%s' %(mainurl, movieid, urlend)
+    cachefile = 'id%s.cache' %(movieid)
     link = getCachedURL(fullurl, cachefile, Setting('cache_movie_info'))
     titlematch = re.compile('<h1>(.+?)</h1>.*<h2>\((.+?)\)</h2>', re.DOTALL).findall(link)
     for title, otitle in titlematch:
@@ -131,8 +131,8 @@ def getMovieInfo(movieid, urlend='movie.html'):
 
 def GetMovieTrailers(movieid, urlend='movie.html'):
     returntrailers = []
-    fullurl = mainurl + '/media/trailer/' + movieid + ',15,' + urlend
-    cachefile = 'id' + movieid + '.cache'
+    fullurl = '%s/media/trailer/%s,15,%s' %(mainurl, movieid, urlend)
+    cachefile = 'id%s.cache' %(movieid)
     link = getCachedURL(fullurl, cachefile, Setting('cache_movie_info'))
     matchtrailerblock = re.compile('<table border=0 cellpadding=0 cellspacing=0 align=center width=100%><tr><td class="standard">.+?<b style="font-weight:bold;">(.+?)</b><br />\(([0-9:]+) Minuten\)(.+?</td></tr></table><br /></td></tr></table><br />)', re.DOTALL).findall(link)
     for trailername, duration, trailerblock in matchtrailerblock:
@@ -261,7 +261,7 @@ def askTrailer(movietrailers):
     trailercaptionlist = [backlabel]
     trailerurllist = ['']
     for trailer in movietrailers:
-        trailercaption = trailer['trailername'] + ' - ' + trailer['language'] + ' - ' + trailer['resolution'] + ' (' + trailer['date'] + ')'
+        trailercaption = '%s - %s - %s (%s)' %(trailer['trailername'], trailer['language'], trailer['resolution'], trailer['date'])
         trailercaptionlist.append(trailercaption)
         trailerurllist.append(trailer['trailerurl'])
     Dialog = xbmcgui.Dialog()
@@ -295,7 +295,7 @@ def guessPrefTrailer(movietrailers):
                 prefmovietrailers = filterdic(movietrailers, 'resolution', allres[searchres])
         diff += 1
     prefmovietrailer = prefmovietrailers[len(prefmovietrailers) - 1]
-    trailercaption = prefmovietrailer['trailername'] + ' - ' + prefmovietrailer['language'] + ' - ' + prefmovietrailer['resolution'] + ' (' + prefmovietrailer['date'] + ')'
+    trailercaption = '%s - %s - %s (%s)' %(trailer['trailername'], trailer['language'], trailer['resolution'], trailer['date'])
     movieinfo = getMovieInfo(movieid)
     setPlayCount(movieid)
     trailer = {'trailerurl': prefmovietrailer['trailerurl'],
