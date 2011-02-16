@@ -9,6 +9,7 @@
 
 # Import standard stuff
 
+import urllib
 import urllib2
 import re
 import os
@@ -22,6 +23,7 @@ import xbmcplugin
 import xbmcgui
 import xbmcaddon
 
+
 # Creating some default variables and objects
 
 Addon = xbmcaddon.Addon('plugin.video.moviemazer')
@@ -34,6 +36,7 @@ _imagedir = 'special://home/addons/%s/resources/images/' %(_id)
 Setting = Addon.getSetting
 Language = Addon.getLocalizedString
 Handle = int(sys.argv[1])
+ProgressDialog = xbmcgui.DialogProgress()
 
 
 # Functions for getting a list of dicts containing movie headers like ID and title
@@ -313,12 +316,34 @@ def playTrailer(trailerurl, title='', studio='', coverurl=''):
                            thumbnailImage = coverurl)
     liz.setInfo(type = 'Video',
                 infoLabels = {'Title': title, 'Studio': studio})
+    if Setting('play_mode') == '0': # Setting is to download and then play the trailer
+        ProgressDialog.create(Language(30025), Language(30026) %('0', '?'))
+        ProgressDialog.update(0)
+        trailerfile = re.search('.*/([^/]+)\?down=1', trailerurl).group(1)
+        trailerfile = re.sub('[^\w\s.-]', '','%s - %s' %(title, trailerfile))
+        downloadpath = Setting('download_path')
+        if downloadpath == '':
+            downloadpath = _cachedir
+        filepath = downloadpath + trailerfile
+        if (not os.path.isfile(filepath)) or os.path.getsize(filepath) == 0:
+            urllib.urlretrieve(trailerurl, filepath, updateProgressHook)
+        trailerurl = filepath
+        ProgressDialog.close()
     Player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
     Player.play(trailerurl, liz)
-    xbmc.sleep(2000) # wait 1 sec
+    xbmc.sleep(2000) # wait 2 sec
     while Player.isPlaying():
         xbmc.sleep(1000) # wait with the container.refresh while xbmc is still playing
     xbmc.executebuiltin('Container.Refresh')
+
+# Function to update the xbmc Dialog while downloading, thanks to the videomonkey addon :-)
+
+def updateProgressHook(count, blocksize, totalsize):
+    percent = int(float(count * blocksize * 100) / totalsize)
+    kilofloat = float(1024)
+    totalsizemb = "%.2f" % (totalsize / kilofloat / kilofloat)
+    countmb = "%.2f" % (count * blocksize / kilofloat / kilofloat)
+    ProgressDialog.update(percent, Language(30025), Language(30026) % (countmb, totalsizemb))
 
 
 # Helper Functions
@@ -416,6 +441,8 @@ def setPlayCount(movieid, count=1):
 
 params = get_params()
 
+print 'MovieMazer Addon started with "%s"' % params
+
 try:
     movieid = params['movieid']
 except:
@@ -464,3 +491,5 @@ elif cat == 3:
     showCurrent()
 else:
     showCategories()
+
+print 'MovieMazer Addon ended'

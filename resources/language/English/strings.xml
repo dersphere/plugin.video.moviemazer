@@ -5,10 +5,13 @@
     <string id="30002">Recent Updates</string>
     <string id="30003">Current Trailers</string>
     
-    <!-- Progress Bar -->
+    <!-- Progress Bars -->
     <string id="30020">Loading movieinfos</string>
     <string id="30021">Movies have to be cached</string>
     <string id="30022">Loading</string>
+    
+    <string id="30025">Trailer download</string>
+    <string id="30026">Progress: %s / %s MB</string>
     
     <!-- Movie infos -->
     <string id="30030">Germany premiere date</string>
@@ -34,4 +37,11 @@
     <string id="30300">Main Menu</string>
     <string id="30310">Start with</string>
     <string id="30311">Categories</string>
+
+    <string id="30400">Playback</string>
+    <string id="30410">Play Mode</string>
+    <string id="30411">Download + Play</string>
+    <string id="30412">Stream</string>
+
+    <string id="30420">Download Location</string>
 </strings>

@@ -1,3 +1,9 @@
+0.3.0
+  Added new feature to first download and then play a trailer (this is now default!)
+  New Setting: Download+Play or Stream a trailer
+  New Setting: Download Location for Trailers
+  Changed: Increased the default trailer quality setting
+
 0.2.2
   Fixed: For some Movies no trailer were available (bad regex)
 
