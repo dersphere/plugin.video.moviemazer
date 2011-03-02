@@ -15,7 +15,7 @@ import re
 import os
 import sys
 import time
-
+from shutil import copyfile
 
 # Import XBMC Stuff
 
@@ -275,7 +275,6 @@ def askTrailer(movietrailers):
                        'title': movieinfo['title'],
                        'studio': trailercaptionlist[chosentrailer],
                        'coverurl':movieinfo['coverurl']}
-            setPlayCount(movieid)
             return trailer
     else:
         Dialog.ok(movieinfo['title'], Language(30012)) #No Trailer found :(
@@ -300,7 +299,6 @@ def guessPrefTrailer(movietrailers):
     prefmovietrailer = prefmovietrailers[len(prefmovietrailers) - 1]
     trailercaption = '%s - %s - %s (%s)' %(prefmovietrailer['trailername'], prefmovietrailer['language'], prefmovietrailer['resolution'], prefmovietrailer['date'])
     movieinfo = getMovieInfo(movieid)
-    setPlayCount(movieid)
     trailer = {'trailerurl': prefmovietrailer['trailerurl'],
                'title': movieinfo['title'],
                'studio': trailercaption,
@@ -310,7 +308,7 @@ def guessPrefTrailer(movietrailers):
 
 # Function to play a Trailer
 
-def playTrailer(trailerurl, title='', studio='', coverurl=''):
+def playTrailer(trailerurl, movieid, title='', studio='', coverurl=''):
     liz = xbmcgui.ListItem(label = title,
                            iconImage = 'DefaultVideo.png',
                            thumbnailImage = coverurl)
@@ -326,16 +324,19 @@ def playTrailer(trailerurl, title='', studio='', coverurl=''):
             downloadpath = _cachedir
         filepath = downloadpath + trailerfile
         if (not os.path.isfile(filepath)) or os.path.getsize(filepath) == 0:
-            urllib.urlretrieve(trailerurl, filepath+'.tmp', updateProgressHook)
-            os.rename(filepath+'.tmp', filepath)
+            filepathtemp = filepath + '.tmp'
+            urllib.urlretrieve(trailerurl, filepathtemp, updateProgressHook)
+            copyfile(filepathtemp, filepath)
+            os.remove(xbmc.translatePath(filepathtemp))
         trailerurl = filepath
         ProgressDialog.close()
     Player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
     Player.play(trailerurl, liz)
+    setPlayCount(movieid)
     xbmc.sleep(2000) # wait 2 sec
     while Player.isPlaying():
         xbmc.sleep(1000) # wait with the container.refresh while xbmc is still playing
-    xbmc.executebuiltin('Container.Refresh')
+    #xbmc.executebuiltin('Container.Refresh')
 
 # Function to update the xbmc Dialog while downloading, thanks to the videomonkey addon :-)
 
@@ -483,6 +484,7 @@ if movieid != '':
             trailer = askTrailer(GetMovieTrailers(movieid))
     if trailer != None:
         playTrailer(trailerurl=trailer['trailerurl'],
+                    movieid=movieid,
                     title=trailer['title'],
                     studio=trailer['studio'],
                     coverurl=trailer['coverurl'])
