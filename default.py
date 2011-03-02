@@ -326,7 +326,8 @@ def playTrailer(trailerurl, title='', studio='', coverurl=''):
             downloadpath = _cachedir
         filepath = downloadpath + trailerfile
         if (not os.path.isfile(filepath)) or os.path.getsize(filepath) == 0:
-            urllib.urlretrieve(trailerurl, filepath, updateProgressHook)
+            urllib.urlretrieve(trailerurl, filepath+'.tmp', updateProgressHook)
+            os.rename(filepath+'.tmp', filepath)
         trailerurl = filepath
         ProgressDialog.close()
     Player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
@@ -344,6 +345,8 @@ def updateProgressHook(count, blocksize, totalsize):
     totalsizemb = "%.2f" % (totalsize / kilofloat / kilofloat)
     countmb = "%.2f" % (count * blocksize / kilofloat / kilofloat)
     ProgressDialog.update(percent, Language(30025), Language(30026) % (countmb, totalsizemb))
+    if ProgressDialog.iscanceled():
+        raise KeyboardInterrupt
 
 
 # Helper Functions
