@@ -7,7 +7,7 @@
 #
 # Special Thanks to the website www.moviemaze.de
 
-# Import standard stuff
+# Import Python stuff
 
 import urllib
 import urllib2
@@ -50,7 +50,7 @@ def getTopTen():
         movie = {'movieid': movieid,
                  'title': title,
                  'urlend': urlend,
-                 'rank': rank + '. ',
+                 'rank': '%s. ' % rank,
                  'date': ''}
         returnmovies.append(movie)
     return returnmovies
@@ -74,7 +74,7 @@ def getRecent():
                  'title': title,
                  'urlend': urlend,
                  'rank':'',
-                 'date': '(%s) ' %(date)}
+                 'date': '(%s) ' % date}
         returnmovies.append(movie)
     return returnmovies
 
@@ -104,7 +104,9 @@ def getMovieInfo(movieid, urlend='movie.html'):
                    'plot': '',
                    'genres': '',
                    'date': ''}
-    fullurl = '%s/media/trailer/%s,15,%s' %(mainurl, movieid, urlend)
+    fullurl = '%s/media/trailer/%s,15,%s' %(mainurl,
+                                            movieid,
+                                            urlend)
     cachefile = 'id%s.cache' %(movieid)
     link = getCachedURL(fullurl, cachefile, Setting('cache_movie_info'))
     titlematch = re.compile('<h1>(.+?)</h1>.*<h2>\((.+?)\)</h2>', re.DOTALL).findall(link)
@@ -134,7 +136,9 @@ def getMovieInfo(movieid, urlend='movie.html'):
 
 def GetMovieTrailers(movieid, urlend='movie.html'):
     returntrailers = []
-    fullurl = '%s/media/trailer/%s,15,%s' %(mainurl, movieid, urlend)
+    fullurl = '%s/media/trailer/%s,15,%s' %(mainurl,
+                                            movieid,
+                                            urlend)
     cachefile = 'id%s.cache' %(movieid)
     link = getCachedURL(fullurl, cachefile, Setting('cache_movie_info'))
     matchtrailerblock = re.compile('<table border=0 cellpadding=0 cellspacing=0 align=center width=100%><tr><td class="standard">.+?<b style="font-weight:bold;">(.+?)</b><br />\(([0-9:]+) Minuten\)(.+?</td></tr></table><br /></td></tr></table><br />)', re.DOTALL).findall(link)
@@ -187,7 +191,7 @@ def showMovies(movies):
     pc = loadPlayCounts()
     counter = 0
     ProgressDialog = xbmcgui.DialogProgress()
-    ProgressDialog.create(Language(30020), str(len(movies)) + ' ' + Language(30021))
+    ProgressDialog.create(Language(30020), '%s %s' % (str(len(movies)), Language(30021)))
     ProgressDialog.update(0)
     for movie in movies:
         movieinfo = getMovieInfo(movieid = movie['movieid'], urlend = movie['urlend'])
@@ -211,7 +215,7 @@ def showMovies(movies):
 # Functions to add single Folders to the xbmc screen and tell xbmc that all is there
 
 def addDir(dirname, cat, iconimage):
-    u = sys.argv[0]+'?cat='+str(cat)
+    u = '%s?cat=%s' % (sys.argv[0], str(cat))
     liz = xbmcgui.ListItem(dirname,
                            iconImage = 'DefaultVideo.png',
                            thumbnailImage = iconimage)
@@ -224,13 +228,13 @@ def addDir(dirname, cat, iconimage):
 
 
 def addMovie(title, movieid, coverurl='', plot='', otitle='', genres='', releasedate='', playcount=0):
-    u = sys.argv[0] + '?cat=' + str(cat) + '&movieid=' + movieid
+    u = '%s?cat=%s&movieid=%s' % (sys.argv[0], str(cat), movieid)
     liz = xbmcgui.ListItem(title,
                            iconImage = 'DefaultVideo.png',
                            thumbnailImage = coverurl)
     liz.setInfo(type = 'Video',
                 infoLabels = {'Title': title,
-                              'Tagline': Language(30030) + ': ' + releasedate,
+                              'Tagline': '%s: %s' %(Language(30030), releasedate),
                               'Plot': plot,
                               'Studio': otitle, #fixme: there is no label for "original title"
                               'Genre': genres})
@@ -240,8 +244,8 @@ def addMovie(title, movieid, coverurl='', plot='', otitle='', genres='', release
     if releasedate != '':
         year = int(releasedate.split('.')[2])
         liz.setInfo(type = 'Video', infoLabels = {'Year': year})
-    contextmenu = [(Language(30231),'XBMC.RunPlugin(' + u + '&mode=guess)'),
-                   (Language(30232),'XBMC.RunPlugin(' + u + '&mode=ask)')]
+    contextmenu = [(Language(30231),'XBMC.RunPlugin(%s&mode=guess)' % u),
+                   (Language(30232),'XBMC.RunPlugin(%s&mode=ask)' % u)]
     liz.addContextMenuItems(contextmenu, False)
     xbmcplugin.addDirectoryItem(handle = Handle,
                                 url = u,
@@ -260,11 +264,14 @@ def endDir():
 
 def askTrailer(movietrailers):
     movieinfo = getMovieInfo(movieid)
-    backlabel = '--> ' + Language(30011) + ' <--' #Back, there is no 'cancel' in Dialog.select :(
+    backlabel = '--> %s <--' % Language(30011) #Back, there is no 'cancel' in Dialog.select :(    
     trailercaptionlist = [backlabel]
     trailerurllist = ['']
     for trailer in movietrailers:
-        trailercaption = '%s - %s - %s (%s)' %(trailer['trailername'], trailer['language'], trailer['resolution'], trailer['date'])
+        trailercaption = '%s - %s - %s (%s)' %(trailer['trailername'],
+                                               trailer['language'],
+                                               trailer['resolution'],
+                                               trailer['date'])
         trailercaptionlist.append(trailercaption)
         trailerurllist.append(trailer['trailerurl'])
     Dialog = xbmcgui.Dialog()
@@ -297,7 +304,10 @@ def guessPrefTrailer(movietrailers):
                 prefmovietrailers = filterdic(movietrailers, 'resolution', allres[searchres])
         diff += 1
     prefmovietrailer = prefmovietrailers[len(prefmovietrailers) - 1]
-    trailercaption = '%s - %s - %s (%s)' %(prefmovietrailer['trailername'], prefmovietrailer['language'], prefmovietrailer['resolution'], prefmovietrailer['date'])
+    trailercaption = '%s - %s - %s (%s)' %(prefmovietrailer['trailername'],
+                                           prefmovietrailer['language'],
+                                           prefmovietrailer['resolution'],
+                                           prefmovietrailer['date'])
     movieinfo = getMovieInfo(movieid)
     trailer = {'trailerurl': prefmovietrailer['trailerurl'],
                'title': movieinfo['title'],
