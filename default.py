@@ -33,7 +33,8 @@ _id = Addon.getAddonInfo('id')
 _cachedir = 'special://profile/addon_data/%s/cache/' %(_id)
 _imagedir = 'special://home/addons/%s/resources/images/' %(_id)
 
-Setting = Addon.getSetting
+GetSetting = Addon.getSetting
+SetSetting = Addon.setSetting
 Language = Addon.getLocalizedString
 Handle = int(sys.argv[1])
 ProgressDialog = xbmcgui.DialogProgress()
@@ -44,7 +45,7 @@ ProgressDialog = xbmcgui.DialogProgress()
 def getTopTen():
     returnmovies = []
     fullurl = '%s/media/trailer/' % mainurl
-    link = getCachedURL(fullurl, 'mainpage.cache', Setting('cache_movies_list'))
+    link = getCachedURL(fullurl, 'mainpage.cache', GetSetting('cache_movies_list'))
     matchtopten = re.compile('<tr><td valign="top" align="right"><b>([0-9]+)</b></td><td width=100% style="text-align:left;"><a href="/media/trailer/([0-9]+),(?:[0-9]+?,)?([^",]+?)">([^<]+)</a> <span class="small_grey">\(([^<]+)\)</span></td></tr>').findall(link)
     for rank, movieid, urlend, title, trailerkind in matchtopten:
         movie = {'movieid': movieid,
@@ -59,7 +60,7 @@ def getTopTen():
 def getRecent():
     returnmovies = []
     fullurl = '%s/media/trailer/' % mainurl
-    link = getCachedURL(fullurl, 'mainpage.cache', Setting('cache_movies_list'))
+    link = getCachedURL(fullurl, 'mainpage.cache', GetSetting('cache_movies_list'))
     matchtrecentupdates = re.compile('<td(?: valign="top" style="text-align:left;"><b style="white-space: nowrap;">([^<]*)</b)?></td><td width=100% style="text-align:left;"><a href="/media/trailer/([0-9]+),(?:[0-9]+?,)?([^",]+?)">([^<]+)</a> <span class="small_grey">\(([^<]+)\)</span></td></tr>').findall(link)
     for date, movieid, urlend, title, trailerkind in matchtrecentupdates:
         if date != '':
@@ -82,7 +83,7 @@ def getRecent():
 def getCurrent():
     returnmovies = []
     fullurl = '%s/media/trailer/' % mainurl
-    link = getCachedURL(fullurl, 'mainpage.cache', Setting('cache_movies_list'))
+    link = getCachedURL(fullurl, 'mainpage.cache', GetSetting('cache_movies_list'))
     matchtacttrailers = re.compile('<tr><td(?: valign="top"><b>[A-Z0-9]</b)?></td><td style="text-align:left;"><a href="/media/trailer/([0-9]+),(?:[0-9]+?,)?([^",]+?)">([^<]+)</a></td></tr>').findall(link)
     for movieid, urlend, title in matchtacttrailers:
         movie = {'movieid': movieid,
@@ -108,7 +109,7 @@ def getMovieInfo(movieid, urlend='movie.html'):
                                             movieid,
                                             urlend)
     cachefile = 'id%s.cache' %(movieid)
-    link = getCachedURL(fullurl, cachefile, Setting('cache_movie_info'))
+    link = getCachedURL(fullurl, cachefile, GetSetting('cache_movie_info'))
     titlematch = re.compile('<h1>(.+?)</h1>.*<h2>\((.+?)\)</h2>', re.DOTALL).findall(link)
     for title, otitle in titlematch:
         returnmovie.update({'title': title, 'otitle': otitle})
@@ -140,7 +141,7 @@ def GetMovieTrailers(movieid, urlend='movie.html'):
                                             movieid,
                                             urlend)
     cachefile = 'id%s.cache' %(movieid)
-    link = getCachedURL(fullurl, cachefile, Setting('cache_movie_info'))
+    link = getCachedURL(fullurl, cachefile, GetSetting('cache_movie_info'))
     matchtrailerblock = re.compile('<table border=0 cellpadding=0 cellspacing=0 align=center width=100%><tr><td class="standard">.+?<b style="font-weight:bold;">(.+?)</b><br />\(([0-9:]+) Minuten\)(.+?</td></tr></table><br /></td></tr></table><br />)', re.DOTALL).findall(link)
     for trailername, duration, trailerblock in matchtrailerblock:
         matchlanguageblock = re.compile('alt="Sprache: (..)">(.+?)>([^<]+)</td></tr></table></td>', re.DOTALL).findall(trailerblock)
@@ -188,7 +189,6 @@ def showCurrent():
 # Functions to show the informations in xbmc
 
 def showMovies(movies):
-    pc = loadPlayCounts()
     counter = 0
     ProgressDialog = xbmcgui.DialogProgress()
     ProgressDialog.create(Language(30020), '%s %s' % (str(len(movies)), Language(30021)))
@@ -203,7 +203,7 @@ def showMovies(movies):
                  otitle = movieinfo['otitle'],
                  genres = movieinfo['genres'],
                  releasedate = movieinfo['date'],
-                 playcount = getPlayCount(movie['movieid'], pc))
+                 playcount = getPlayCount(movie['movieid']))
         counter += 1
         ProgressDialog.update(100 * counter / len(movies),
                               str(len(movies)) + ' ' + Language(30021), # x movies have to be cached
@@ -247,7 +247,7 @@ def addMovie(title, movieid, coverurl='', plot='', otitle='', genres='', release
     contextmenu = [(Language(30231), 'XBMC.RunPlugin(%s&mode=guess)' % u),
                    (Language(30232), 'XBMC.RunPlugin(%s&mode=ask)' % u),
                    (Language(30233), 'XBMC.Action(Info)'),
-                   (Language(1045),  'XBMC.RunPlugin(%s&settings=open)' % u)]
+                   (Language(1045),  'XBMC.RunPlugin(%s&GetSettings=open)' % u)]
     liz.addContextMenuItems(contextmenu, True)
     xbmcplugin.addDirectoryItem(handle = Handle,
                                 url = u,
@@ -262,7 +262,7 @@ def endDir():
     xbmcplugin.endOfDirectory(Handle, cacheToDisc=True)
 
 
-# Functions to choose a trailer - ask user or guess with the preferred settings
+# Functions to choose a trailer - ask user or guess with the preferred GetSettings
 
 def askTrailer(movietrailers):
     movieinfo = getMovieInfo(movieid)
@@ -290,12 +290,12 @@ def askTrailer(movietrailers):
 
 
 def guessPrefTrailer(movietrailers):
-    prefres = int(Setting('trailer_xres'))
+    prefres = int(GetSetting('trailer_xres'))
     allres = ['1920', '1280', '1024', '848', '720', '640', '512', '480', '320']
     prefmovietrailers = []
     diff = 0
-    if len(filterdic(movietrailers, 'language', Setting('trailer_lang'))) > 0:
-        movietrailers = filterdic(movietrailers, 'language', Setting('trailer_lang'))
+    if len(filterdic(movietrailers, 'language', GetSetting('trailer_lang'))) > 0:
+        movietrailers = filterdic(movietrailers, 'language', GetSetting('trailer_lang'))
     while len(prefmovietrailers) == 0:
         searchres = prefres + diff
         if not searchres >= len(allres):
@@ -328,12 +328,12 @@ def playTrailer(trailerurl, movieid, title='', studio='', coverurl=''):
                            thumbnailImage = coverurl)
     liz.setInfo(type = 'Video',
                 infoLabels = {'Title': title, 'Studio': studio})
-    if Setting('play_mode') == '0': # Setting is to download and then play the trailer
+    if GetSetting('play_mode') == '0': # GetSetting is to download and then play the trailer
         ProgressDialog.create(Language(30025), Language(30026) %('0', '?'), '%s (%s)' %(title, studio))
         ProgressDialog.update(0)
         trailerfile = re.search('.*/([^/]+)\?down=1', trailerurl).group(1)
         trailerfile = re.sub('[^\w\s.-]', '','%s - %s' %(title, trailerfile))
-        downloadpath = Setting('download_path')
+        downloadpath = GetSetting('download_path')
         if downloadpath == '':
             downloadpath = _cachedir
         filepath = downloadpath + trailerfile
@@ -350,7 +350,7 @@ def playTrailer(trailerurl, movieid, title='', studio='', coverurl=''):
     xbmc.sleep(2000) # wait 2 sec
     while Player.isPlaying():
         xbmc.sleep(1000) # wait with the container.refresh while xbmc is still playing
-    #xbmc.executebuiltin('Container.Refresh')
+    #xbmc.executebuiltin('Container.Update')
 
 # Function to update the xbmc Dialog while downloading, thanks to the videomonkey addon :-)
 
@@ -369,7 +369,7 @@ def updateProgressHook(count, blocksize, totalsize):
 def getCachedURL(url, filename, timetolive=1):
     requestheader = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2.9) Gecko/20100824 Firefox/3.6.9'
     cachefilefullpath = _cachedir + filename
-    timetolive = int(timetolive) * 60 * 60  # timetolive settings are in hours!
+    timetolive = int(timetolive) * 60 * 60  # timetolive GetSettings are in hours!
     if (not os.path.isdir(_cachedir)):
         os.makedirs(_cachedir)
     try: cachefiledate = os.path.getmtime(cachefilefullpath)
@@ -412,47 +412,18 @@ def get_params():
     return param
 
 
-# Functions for get/set and load/save the user playcounts
+# Functions for get/set the user playcounts
 
-def loadPlayCounts():
-    pc = {}
-    watchedfile = _cachedir + 'watchedfile'
-    try:
-        infile = open(watchedfile,'r')
-        for line in infile.readlines():
-            movie, playcount = line.split(';')
-            pc[movie.strip()] = int(playcount.strip())
-        infile.close()
-    except:
-        pass
-    return pc
+def getPlayCount(movieid):
+    playcount = GetSetting('playcount-movieid=%s' % movieid)
+    if not playcount:
+        playcount = 0
+    return playcount
 
-
-def savePlayCounts(pc):
-    watchedfile = _cachedir + 'watchedfile'
-    outfile = open(watchedfile,'w')
-    for line in pc.iteritems():
-        outfile.write(';'.join(map(str,line)) + '\n')
-    outfile.close()
-
-
-def getPlayCount(movieid, pc=None):
-    if pc == None:
-        pc = loadPlayCounts()
-    if movieid in pc:
-        movieplayed = pc[movieid]
-    else:
-        movieplayed = 0
-    return movieplayed
-
-
-def setPlayCount(movieid, count=1):
-    pc = loadPlayCounts()
-    if movieid in pc:
-        pc[movieid] += count
-    else:
-        pc[movieid] = count
-    savePlayCounts(pc)
+def setPlayCount(movieid):
+    pc = int(getPlayCount(movieid))
+    pc += 1
+    SetSetting('playcount-movieid=%s' % movieid, str(pc))
 
 
 # Addon Standard Stuff - here the addon starts
@@ -477,7 +448,7 @@ except:
     mode = None
 
 
-startwith = int(Setting('start_with'))
+startwith = int(GetSetting('start_with'))
 if startwith != 0:
     if cat == None:
         cat = startwith
@@ -491,7 +462,7 @@ if movieid != '':
     elif mode == 'ask':
         trailer = askTrailer(GetMovieTrailers(movieid))
     else:
-        prefmode = Setting('pref_mode')
+        prefmode = GetSetting('pref_mode')
         if prefmode == '0':
             trailer = guessPrefTrailer(GetMovieTrailers(movieid))
         elif prefmode == '1':
