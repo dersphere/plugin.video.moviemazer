@@ -43,7 +43,7 @@ ProgressDialog = xbmcgui.DialogProgress()
 
 def getTopTen():
     returnmovies = []
-    fullurl = mainurl + '/media/trailer/'
+    fullurl = '%s/media/trailer/' % mainurl
     link = getCachedURL(fullurl, 'mainpage.cache', Setting('cache_movies_list'))
     matchtopten = re.compile('<tr><td valign="top" align="right"><b>([0-9]+)</b></td><td width=100% style="text-align:left;"><a href="/media/trailer/([0-9]+),(?:[0-9]+?,)?([^",]+?)">([^<]+)</a> <span class="small_grey">\(([^<]+)\)</span></td></tr>').findall(link)
     for rank, movieid, urlend, title, trailerkind in matchtopten:
@@ -58,7 +58,7 @@ def getTopTen():
 
 def getRecent():
     returnmovies = []
-    fullurl = mainurl + '/media/trailer/'
+    fullurl = '%s/media/trailer/' % mainurl
     link = getCachedURL(fullurl, 'mainpage.cache', Setting('cache_movies_list'))
     matchtrecentupdates = re.compile('<td(?: valign="top" style="text-align:left;"><b style="white-space: nowrap;">([^<]*)</b)?></td><td width=100% style="text-align:left;"><a href="/media/trailer/([0-9]+),(?:[0-9]+?,)?([^",]+?)">([^<]+)</a> <span class="small_grey">\(([^<]+)\)</span></td></tr>').findall(link)
     for date, movieid, urlend, title, trailerkind in matchtrecentupdates:
@@ -67,7 +67,7 @@ def getRecent():
         else:
             date = lastdate
         datearray = date.split(' ')
-        months_de_short = ['', 'Jan', 'Feb', 'M\xe4z', 'Apr', 'Mai', 'Juni', 'Juli', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+        months_de_short = ['', 'Jan', 'Feb', 'M\xe4r', 'Apr', 'Mai', 'Juni', 'Juli', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
         try: date = datearray[0]+ str(months_de_short.index(datearray[1])).zfill(2) #fixme: this could be made better, no idea how :)
         except: date = ''
         movie = {'movieid': movieid,
@@ -81,7 +81,7 @@ def getRecent():
 
 def getCurrent():
     returnmovies = []
-    fullurl = mainurl + '/media/trailer/'
+    fullurl = '%s/media/trailer/' % mainurl
     link = getCachedURL(fullurl, 'mainpage.cache', Setting('cache_movies_list'))
     matchtacttrailers = re.compile('<tr><td(?: valign="top"><b>[A-Z0-9]</b)?></td><td style="text-align:left;"><a href="/media/trailer/([0-9]+),(?:[0-9]+?,)?([^",]+?)">([^<]+)</a></td></tr>').findall(link)
     for movieid, urlend, title in matchtacttrailers:
