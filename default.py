@@ -244,9 +244,11 @@ def addMovie(title, movieid, coverurl='', plot='', otitle='', genres='', release
     if releasedate != '':
         year = int(releasedate.split('.')[2])
         liz.setInfo(type = 'Video', infoLabels = {'Year': year})
-    contextmenu = [(Language(30231),'XBMC.RunPlugin(%s&mode=guess)' % u),
-                   (Language(30232),'XBMC.RunPlugin(%s&mode=ask)' % u)]
-    liz.addContextMenuItems(contextmenu, False)
+    contextmenu = [(Language(30231), 'XBMC.RunPlugin(%s&mode=guess)' % u),
+                   (Language(30232), 'XBMC.RunPlugin(%s&mode=ask)' % u),
+                   (Language(30233), 'XBMC.Action(Info)'),
+                   (Language(1045),  'XBMC.RunPlugin(%s&settings=open)' % u)]
+    liz.addContextMenuItems(contextmenu, True)
     xbmcplugin.addDirectoryItem(handle = Handle,
                                 url = u,
                                 listitem = liz,
@@ -327,7 +329,7 @@ def playTrailer(trailerurl, movieid, title='', studio='', coverurl=''):
     liz.setInfo(type = 'Video',
                 infoLabels = {'Title': title, 'Studio': studio})
     if Setting('play_mode') == '0': # Setting is to download and then play the trailer
-        ProgressDialog.create(Language(30025), Language(30026) %('0', '?'))
+        ProgressDialog.create(Language(30025), Language(30026) %('0', '?'), '%s (%s)' %(title, studio))
         ProgressDialog.update(0)
         trailerfile = re.search('.*/([^/]+)\?down=1', trailerurl).group(1)
         trailerfile = re.sub('[^\w\s.-]', '','%s - %s' %(title, trailerfile))
@@ -357,7 +359,7 @@ def updateProgressHook(count, blocksize, totalsize):
     kilofloat = float(1024)
     totalsizemb = "%.2f" % (totalsize / kilofloat / kilofloat)
     countmb = "%.2f" % (count * blocksize / kilofloat / kilofloat)
-    ProgressDialog.update(percent, Language(30025), Language(30026) % (countmb, totalsizemb))
+    ProgressDialog.update(percent, Language(30026) % (countmb, totalsizemb))
     if ProgressDialog.iscanceled():
         raise KeyboardInterrupt
 
