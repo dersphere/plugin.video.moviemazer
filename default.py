@@ -289,7 +289,7 @@ def askTrailer(movietrailers):
 
 def guessPrefTrailer(movietrailers):
     prefres = int(Setting('trailer_xres'))
-    allres = ['1920', '1280', '848', '720', '640', '480', '320']
+    allres = ['1920', '1280', '1024', '848', '720', '640', '512', '480', '320']
     prefmovietrailers = []
     diff = 0
     if len(filterdic(movietrailers, 'language', Setting('trailer_lang'))) > 0:
@@ -303,6 +303,8 @@ def guessPrefTrailer(movietrailers):
             if searchres >= 0:
                 prefmovietrailers = filterdic(movietrailers, 'resolution', allres[searchres])
         diff += 1
+        if diff > len(allres) +1:
+            break
     prefmovietrailer = prefmovietrailers[len(prefmovietrailers) - 1]
     trailercaption = '%s - %s - %s (%s)' %(prefmovietrailer['trailername'],
                                            prefmovietrailer['language'],
@@ -498,6 +500,8 @@ if movieid != '':
                     title=trailer['title'],
                     studio=trailer['studio'],
                     coverurl=trailer['coverurl'])
+    else:
+        pass # could be that user was asked to chose trailer but he hit "back"
 elif cat == 1:
     showTopTen()
 elif cat == 2:
