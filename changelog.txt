@@ -1,4 +1,4 @@
-0.3.0
+0.3.1
   Added new feature to first download and then play a trailer (this is now default!)
   New Settings: Download+Play or Stream a trailer
   New Settings: Download Location for Trailers
