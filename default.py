@@ -266,7 +266,7 @@ def endDir():
 
 def askTrailer(movietrailers):
     movieinfo = getMovieInfo(movieid)
-    backlabel = '--> %s <--' % Language(30011) #Back, there is no 'cancel' in Dialog.select :(    
+    backlabel = '--> %s <--' % Language(30011) #Back, there is no 'cancel' in Dialog.select :(
     trailercaptionlist = [backlabel]
     trailerurllist = ['']
     for trailer in movietrailers:
