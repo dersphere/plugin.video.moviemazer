@@ -148,7 +148,7 @@ def GetMovieTrailers(movieid, urlend='movie.html'):
         for language, languageblock, date in matchlanguageblock:
             datearray = date.split(' ')
             months_de_short = ['', 'Jan', 'Feb', 'M\xe4rz', 'Apr', 'Mai', 'Juni', 'Juli', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
-            try: date = datearray[0]+ str(months_de_short.index(datearray[1])).zfill(2) +  '.2010' #fixme: this could be made better, no idea how :)
+            try: date = datearray[0]+ str(months_de_short.index(datearray[1])).zfill(2) +  '.2011' #fixme: this could be made better, no idea how :)
             except: date = ''
             matchtrailer = re.compile('generateDownloadLink\("([^"]+_([0-9]+)\.(?:mov|mp4)\?down=1)"\)').findall(languageblock)
             for trailerurl, resolution in matchtrailer:
@@ -328,7 +328,7 @@ def playTrailer(trailerurl, movieid, title='', studio='', coverurl=''):
                            thumbnailImage = coverurl)
     liz.setInfo(type = 'Video',
                 infoLabels = {'Title': title, 'Studio': studio})
-    if GetSetting('play_mode') == '0': # GetSetting is to download and then play the trailer
+    if GetSetting('play_mode') == '0': # Setting is to download and then play the trailer
         ProgressDialog.create(Language(30025), Language(30026) %('0', '?'), '%s (%s)' %(title, studio))
         ProgressDialog.update(0)
         trailerfile = re.search('.*/([^/]+)\?down=1', trailerurl).group(1)
@@ -352,7 +352,8 @@ def playTrailer(trailerurl, movieid, title='', studio='', coverurl=''):
         xbmc.sleep(1000) # wait with the container.refresh while xbmc is still playing
     #xbmc.executebuiltin('Container.Update')
 
-# Function to update the xbmc Dialog while downloading, thanks to the videomonkey addon :-)
+
+# Function to update the xbmc Dialog while downloading, inspired by the videomonkey addon :-)
 
 def updateProgressHook(count, blocksize, totalsize):
     percent = int(float(count * blocksize * 100) / totalsize)
@@ -369,7 +370,7 @@ def updateProgressHook(count, blocksize, totalsize):
 def getCachedURL(url, filename, timetolive=1):
     requestheader = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2.9) Gecko/20100824 Firefox/3.6.9'
     cachefilefullpath = _cachedir + filename
-    timetolive = int(timetolive) * 60 * 60  # timetolive GetSettings are in hours!
+    timetolive = int(timetolive) * 60 * 60  # timetolive Settings are in hours!
     if (not os.path.isdir(_cachedir)):
         os.makedirs(_cachedir)
     try: cachefiledate = os.path.getmtime(cachefilefullpath)
