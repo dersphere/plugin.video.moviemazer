@@ -70,14 +70,14 @@ def get_recent_movies():
         datearray = date.split(' ')
         months_de_short = ['', 'Jan', 'Feb', 'M\xe4r', 'Apr', 'Mai', 'Juni', 'Juli', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez']
         try:
-            date = datearray[0] + str(months_de_short.index(datearray[1])).zfill(2)  # fixme: this could be made better, no idea how :)
+            date = ' (%s%02d.%s)' % (datearray[0], months_de_short.index(datearray[1]), '2011')  # Fixme: dirty hack :(
         except:
             date = ''
         movie = {'movieid': movieid,
                  'title': title,
                  'urlend': urlend,
                  'rank': '',
-                 'date': '(%s) ' % date}
+                 'date': date}
         returnmovies.append(movie)
     return returnmovies
 
@@ -127,7 +127,7 @@ def get_movie_infos(movieid, urlend='movie.html'):
     for releasedateugly in releasedatematch:
         datearray = releasedateugly.split(' ')
         months_de_long = ['', 'Januar', 'Februar', 'M\xe4rz', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember']
-        date = datearray[0] + str(months_de_long.index(datearray[1])).zfill(2) + '.' + datearray[2]
+        date = ' (%s%02d.%s)' % (datearray[0], months_de_long.index(datearray[1]), '2011')  # Fixme: dirty hack :(
         returnmovie.update({'date': date})
     genresmatch = re.compile('<b style="font-weight:bold;">Genre:</b> (.+?)<br />', re.DOTALL).findall(link)
     for allgenres in genresmatch:
@@ -202,15 +202,15 @@ def show_movies(movies):
     ProgressDialog.update(0)
     for movie in movies:
         movieinfo = get_movie_infos(movieid=movie['movieid'], urlend=movie['urlend'])
-        title = movie['rank'] + movie['date'] + movieinfo['title']
+        title = '%s%s%s' % (movie['rank'], movieinfo['title'], movie['date'])
         add_movie(title=title,
-                 movieid=movieinfo['movieid'],
-                 coverurl=movieinfo['coverurl'],
-                 plot=movieinfo['plot'],
-                 otitle=movieinfo['otitle'],
-                 genres=movieinfo['genres'],
-                 releasedate=movieinfo['date'],
-                 playcount=get_playcount(movie['movieid']))
+                  movieid=movieinfo['movieid'],
+                  coverurl=movieinfo['coverurl'],
+                  plot=movieinfo['plot'],
+                  otitle=movieinfo['otitle'],
+                  genres=movieinfo['genres'],
+                  releasedate=movieinfo['date'],
+                  playcount=get_playcount(movie['movieid']))
         counter += 1
         ProgressDialog.update(100 * counter / len(movies),
                               '%s %s' % (str(len(movies)), Language(30021)),  # x movies have to be cached
@@ -249,13 +249,10 @@ def add_movie(title, movieid, coverurl='', plot='', otitle='', genres='', releas
     liz.setProperty('releasedate', releasedate)
     if int(playcount) > 0:
         liz.setInfo(type='Video', infoLabels={'overlay': 7})
-    if releasedate != '':
-        year = int(releasedate.split('.')[2])
-        liz.setInfo(type='Video', infoLabels={'Year': year})
     contextmenu = [(Language(30231), 'XBMC.RunPlugin(%s&mode=guess)' % u),
                    (Language(30232), 'XBMC.RunPlugin(%s&mode=ask)' % u),
                    (Language(30233), 'XBMC.Action(Info)'),
-                   (Language(1045),  'XBMC.RunPlugin(%s&GetSettings=open)' % u)]
+                   (Language(1045), 'XBMC.RunPlugin(%s&GetSettings=open)' % u)]
     liz.addContextMenuItems(contextmenu, True)
     xbmcplugin.addDirectoryItem(handle=Handle,
                                 url=u,
@@ -345,7 +342,7 @@ def play_trailer(trailerurl, movieid, title='', studio='', coverurl=''):
         if downloadpath == '':
             downloadpath = CACHE_DIR
         filepath = downloadpath + trailerfile
-        if (not os.path.isfile(filepath)) or os.path.getsize(filepath) == 0:
+        if not os.path.isfile(filepath):
             filepathtemp = filepath + '.tmp'
             urllib.urlretrieve(trailerurl, filepathtemp, update_progress_hook)
             copyfile(filepathtemp, filepath)
@@ -375,7 +372,7 @@ def get_cached_url(url, filename, timetolive=1):
     requestheader = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.2.9) Gecko/20100824 Firefox/3.6.9'
     cachefilefullpath = CACHE_DIR + filename
     timetolive = int(timetolive) * 60 * 60  # timetolive Settings are in hours!
-    if (not os.path.isdir(CACHE_DIR)):
+    if not os.path.isdir(CACHE_DIR):
         os.makedirs(CACHE_DIR)
     try:
         cachefiledate = os.path.getmtime(cachefilefullpath)
@@ -477,10 +474,10 @@ if movieid != '':
             trailer = ask_for_trailer(get_movie_trailers(movieid))
     if trailer != None:
         play_trailer(trailerurl=trailer['trailerurl'],
-                    movieid=movieid,
-                    title=trailer['title'],
-                    studio=trailer['studio'],
-                    coverurl=trailer['coverurl'])
+                     movieid=movieid,
+                     title=trailer['title'],
+                     studio=trailer['studio'],
+                     coverurl=trailer['coverurl'])
     else:
         pass  # could be that user was asked to chose trailer but he hit "back"
 elif cat == 1:
