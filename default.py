@@ -221,7 +221,7 @@ def add_dir(dirname, cat, iconimage):
                            thumbnailImage = iconimage)
     liz.setInfo(type = 'Video',
                 infoLabels = {'Title': dirname})
-    ok = xbmcplugin.add_directoryItem(handle = Handle,
+    ok = xbmcplugin.addDirectoryItem(handle = Handle,
                                       url = u,
                                       listitem = liz,
                                       isFolder = True)
@@ -249,7 +249,7 @@ def add_movie(title, movieid, coverurl='', plot='', otitle='', genres='', releas
                    (Language(30233), 'XBMC.Action(Info)'),
                    (Language(1045),  'XBMC.RunPlugin(%s&GetSettings=open)' % u)]
     liz.addContextMenuItems(contextmenu, True)
-    xbmcplugin.add_directoryItem(handle = Handle,
+    xbmcplugin.addDirectoryItem(handle = Handle,
                                  url = u,
                                  listitem = liz,
                                  isFolder = False)
