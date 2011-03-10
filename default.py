@@ -347,10 +347,6 @@ def play_trailer(trailerurl, movieid, title='', studio='', coverurl=''):
     Player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
     Player.play(trailerurl, liz)
     set_playcount(movieid)
-    xbmc.sleep(2000) # wait 2 sec
-    while Player.isPlaying():
-        xbmc.sleep(1000) # wait with the container.refresh while xbmc is still playing
-    #xbmc.executebuiltin('Container.Update')
 
 
 # Function to update the xbmc Dialog while downloading, inspired by the videomonkey addon :-)
