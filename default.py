@@ -19,6 +19,7 @@ from shutil import copyfile
 
 # Import XBMC Stuff
 
+import xbmc
 import xbmcplugin
 import xbmcgui
 import xbmcaddon
@@ -30,7 +31,7 @@ Addon = xbmcaddon.Addon('plugin.video.moviemazer')
 MAIN_URL = 'http://www.moviemaze.de'
 
 ADDON_ID = Addon.getAddonInfo('id')
-CACHE_DIR = 'special://profile/addon_data/%s/cache/' % ADDON_ID
+CACHE_DIR = xbmc.translatePath('special://profile/addon_data/%s/cache/' % ADDON_ID)
 IMAGE_DIR = 'special://home/addons/%s/resources/images/' % ADDON_ID
 
 GetSetting = Addon.getSetting
